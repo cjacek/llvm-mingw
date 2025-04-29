@@ -122,25 +122,46 @@ for arch in $ARCHS; do
         -DCMAKE_CXX_FLAGS_INIT="$CFGUARD_CFLAGS" \
         $SRC_DIR
     cmake --build . ${CORES:+-j${CORES}}
-    cmake --install . --prefix "$INSTALL_PREFIX"
-    mkdir -p "$PREFIX/$arch-w64-mingw32/bin"
-    if [ -n "$SANITIZERS" ]; then
-        case $arch in
-        aarch64)
-            # asan doesn't work on aarch64 or armv7; make this clear by omitting
-            # the installed files altogether.
-            rm -f "$INSTALL_PREFIX/lib/windows/libclang_rt.asan"*aarch64*
-            ;;
-        armv7)
-            rm -f "$INSTALL_PREFIX/lib/windows/libclang_rt.asan"*arm*
-            ;;
-        *)
-            mv "$INSTALL_PREFIX/lib/windows/"*.dll "$PREFIX/$arch-w64-mingw32/bin"
-            ;;
-        esac
+    if [ $arch != arm64ec ]; then
+        cmake --install . --prefix "$INSTALL_PREFIX"
+        mkdir -p "$PREFIX/$arch-w64-mingw32/bin"
+        if [ -n "$SANITIZERS" ]; then
+            case $arch in
+            aarch64)
+                # asan doesn't work on aarch64 or armv7; make this clear by omitting
+                # the installed files altogether.
+                rm -f "$INSTALL_PREFIX/lib/windows/libclang_rt.asan"*aarch64*
+                ;;
+            armv7)
+                rm -f "$INSTALL_PREFIX/lib/windows/libclang_rt.asan"*arm*
+                ;;
+            *)
+                mv "$INSTALL_PREFIX/lib/windows/"*.dll "$PREFIX/$arch-w64-mingw32/bin"
+                ;;
+            esac
+        fi
     fi
     cd ..
 done
+
+# Clang expects the aarch64 compiler-rt name on ARM64EC. While this could be adjusted
+# in Clang, the current approach matches MSVC, where the core CRT is provided as
+# archives containing both EC and native support. Ideally, the LLVM build system would
+# handle this, but for now we can merge it here.
+#
+# Additionally, FEX already hardcodes the arm64ec name. Alternatively, FEX could use
+# something like $(CC) -print-libgcc-file-name instead.
+case $ARCHS in
+*arm64ec*)
+    rm -f "$INSTALL_PREFIX/lib/windows/libclang_rt.builtins-aarch64.a" \
+          "$INSTALL_PREFIX/lib/windows/libclang_rt.builtins-arm64ec.a"
+    "$PREFIX/bin/llvm-lib" -machine:arm64ec "-out:$INSTALL_PREFIX/lib/windows/libclang_rt.builtins-aarch64.a" \
+                           build-aarch64/lib/windows/libclang_rt.builtins-aarch64.a \
+                           build-arm64ec/lib/windows/libclang_rt.builtins-arm64ec.a
+    cd "$INSTALL_PREFIX/lib/windows/"
+    ln -sf libclang_rt.builtins-aarch64.a libclang_rt.builtins-arm64ec.a
+    ;;
+esac
 
 if [ "$INSTALL_PREFIX" != "$CLANG_RESOURCE_DIR" ]; then
     # symlink to system headers - skip copy
