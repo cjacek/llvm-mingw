@@ -16,7 +16,7 @@
 
 set -e
 
-: ${LLVM_VERSION:=llvmorg-20.1.4}
+: ${LLVM_VERSION:=9a78657aa6193613b486fd344ad72c16abeb35db}
 ASSERTS=OFF
 unset HOST
 BUILDDIR="build"
@@ -89,7 +89,7 @@ if [ ! -d llvm-project ]; then
     mkdir llvm-project
     cd llvm-project
     git init
-    git remote add origin https://github.com/llvm/llvm-project.git
+    git remote add origin https://github.com/cjacek/llvm-project.git
     cd ..
     CHECKOUT=1
 fi
