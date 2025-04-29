@@ -27,16 +27,16 @@ if [ "$2" = "nativeonly" ]; then
     NATIVEONLY=1
 fi
 
-time docker build -f Dockerfile . -t mstorsjo/llvm-mingw:latest -t mstorsjo/llvm-mingw:$TAG
+time docker build -f Dockerfile . -t cjacek/llvm-mingw:latest -t cjacek/llvm-mingw:$TAG
 
 DISTRO=ubuntu-24.04-$(uname -m)
-docker run --rm mstorsjo/llvm-mingw:latest sh -c "cd /opt && mv llvm-mingw llvm-mingw-$TAG-ucrt-$DISTRO && tar -Jcvf - --format=ustar --numeric-owner --owner=0 --group=0 llvm-mingw-$TAG-ucrt-$DISTRO" > llvm-mingw-$TAG-ucrt-$DISTRO.tar.xz
+docker run --rm cjacek/llvm-mingw:latest sh -c "cd /opt && mv llvm-mingw llvm-mingw-$TAG-ucrt-$DISTRO && tar -Jcvf - --format=ustar --numeric-owner --owner=0 --group=0 llvm-mingw-$TAG-ucrt-$DISTRO" > llvm-mingw-$TAG-ucrt-$DISTRO.tar.xz
 
 if [ -n "$NATIVEONLY" ]; then
     exit 0
 fi
 
-time docker build -f Dockerfile.dev . -t mstorsjo/llvm-mingw:dev -t mstorsjo/llvm-mingw:dev-$TAG
+time docker build -f Dockerfile.dev . -t cjacek/llvm-mingw:dev -t cjacek/llvm-mingw:dev-$TAG
 
 cleanup() {
     for i in $temp_images; do
@@ -49,7 +49,7 @@ trap cleanup EXIT INT TERM
 for arch in i686 x86_64 armv7 aarch64; do
     temp=$(uuidgen)
     temp_images="$temp_images $temp"
-    time docker build -f Dockerfile.cross --build-arg BASE=mstorsjo/llvm-mingw:dev --build-arg CROSS_ARCH=$arch --build-arg TAG=$TAG-ucrt- --build-arg WITH_PYTHON=1 -t $temp .
+    time docker build -f Dockerfile.cross --build-arg BASE=cjacek/llvm-mingw:dev --build-arg CROSS_ARCH=$arch --build-arg TAG=$TAG-ucrt- --build-arg WITH_PYTHON=1 -t $temp .
     ./extract-docker.sh $temp /llvm-mingw-$TAG-ucrt-$arch.zip
 done
 
