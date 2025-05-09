@@ -120,7 +120,7 @@ if [ -n "$SYNC" ] || [ -n "$CHECKOUT" ]; then
             ;;
         esac
     fi
-    git am ../patches/*
+    git apply ../patches/*
     cd ..
 fi
 
