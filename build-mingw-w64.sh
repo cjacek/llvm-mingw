@@ -18,7 +18,7 @@ set -e
 
 : ${DEFAULT_WIN32_WINNT:=0x601}
 : ${DEFAULT_MSVCRT:=ucrt}
-: ${MINGW_W64_VERSION:=c28e9555bb8800c53449f42a465ad9a5676fce88}
+: ${MINGW_W64_VERSION:=arm64x}
 
 CFGUARD_FLAGS="--enable-cfguard"
 
@@ -56,7 +56,7 @@ if [ -z "$CHECKOUT_ONLY" ]; then
 fi
 
 if [ ! -d mingw-w64 ]; then
-    git clone https://github.com/mingw-w64/mingw-w64
+    git clone https://github.com/cjacek/mingw-w64
     CHECKOUT=1
 fi
 
