@@ -114,15 +114,15 @@ fi
 
 cd mingw-w64-crt
 for arch in $ARCHS; do
-    [ -z "$CLEAN" ] || rm -rf build-$arch
-    mkdir -p build-$arch
-    cd build-$arch
     case $arch in
     armv7)
         FLAGS="--disable-lib32 --disable-lib64 --enable-libarm32"
         ;;
-    aarch64|arm64ec)
-        FLAGS="--disable-lib32 --disable-lib64 --enable-libarm64"
+    aarch64)
+        FLAGS="--disable-lib32 --disable-lib64 --enable-libarm64 --enable-arm64x"
+        ;;
+    arm64ec)
+        continue
         ;;
     i686)
         FLAGS="--enable-lib32 --disable-lib64"
@@ -133,6 +133,9 @@ for arch in $ARCHS; do
     esac
     FLAGS="$FLAGS --with-default-msvcrt=$DEFAULT_MSVCRT"
     FLAGS="$FLAGS --enable-silent-rules"
+    [ -z "$CLEAN" ] || rm -rf build-$arch
+    mkdir -p build-$arch
+    cd build-$arch
     ../configure --host=$arch-w64-mingw32 --prefix="$PREFIX/$arch-w64-mingw32" $FLAGS $CFGUARD_FLAGS $CRT_CONFIG_FLAGS
     $MAKE -j$CORES
     $MAKE install
@@ -141,6 +144,12 @@ done
 cd ..
 
 for arch in $ARCHS; do
+    case $arch in
+    arm64ec)
+        continue
+        ;;
+    esac
+
     if [ ! -f $PREFIX/$arch-w64-mingw32/lib/libssp.a ]; then
         # Create empty dummy archives, to avoid failing when the compiler
         # driver adds "-lssp -lssh_nonshared" when linking.
