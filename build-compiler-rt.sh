@@ -135,6 +135,18 @@ if [ -n "$NATIVE" ]; then
 fi
 
 for arch in $ARCHS; do
+    EXTRA_CFLAGS=""
+    case $arch in
+    aarch64)
+        if [ -z "$SANITIZERS" ]; then
+            EXTRA_CFLAGS="-marm64x"
+        fi
+        ;;
+    arm64ec)
+        continue
+        ;;
+    esac
+
     [ -z "$CLEAN" ] || rm -rf build-$arch$BUILD_SUFFIX
     mkdir -p build-$arch$BUILD_SUFFIX
     cd build-$arch$BUILD_SUFFIX
@@ -160,8 +172,9 @@ for arch in $ARCHS; do
         -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
         -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY \
         -DSANITIZER_CXX_ABI=libc++ \
-        -DCMAKE_C_FLAGS_INIT="$CFGUARD_CFLAGS" \
-        -DCMAKE_CXX_FLAGS_INIT="$CFGUARD_CFLAGS" \
+        -DCMAKE_C_FLAGS_INIT="$CFGUARD_CFLAGS $EXTRA_CFLAGS" \
+        -DCMAKE_CXX_FLAGS_INIT="$CFGUARD_CFLAGS $EXTRA_CFLAGS" \
+        -DCMAKE_ASM_FLAGS_INIT="$EXTRA_CFLAGS" \
         $SRC_DIR
     cmake --build . ${CORES:+-j${CORES}}
 
@@ -196,20 +209,6 @@ for arch in $ARCHS; do
         fi
     fi
     cd ..
-done
-
-# Clang expects the aarch64 compiler-rt name on ARM64EC. While this could be adjusted
-# in Clang, the current approach mirrors MSVC, where the core CRT is provided as
-# archives containing both EC and native support. Ideally, the LLVM build system would
-# handle this automatically, but for now we can merge it here.
-for arch in $ARCHS; do
-    if [ "$arch" = "arm64ec" ]; then
-        rm -f "$INSTALL_PREFIX/lib/windows/libclang_rt.builtins-aarch64.a" \
-              "$INSTALL_PREFIX/lib/windows/libclang_rt.builtins-arm64ec.a"
-        "$PREFIX/bin/llvm-lib" -machine:arm64ec "-out:$INSTALL_PREFIX/lib/windows/libclang_rt.builtins-aarch64.a" \
-                               build-aarch64/lib/windows/libclang_rt.builtins-aarch64.a \
-                               build-arm64ec/lib/windows/libclang_rt.builtins-arm64ec.a
-    fi
 done
 
 if [ "$INSTALL_PREFIX" != "$CLANG_RESOURCE_DIR" ]; then

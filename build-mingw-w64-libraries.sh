@@ -58,15 +58,26 @@ fi
 cd mingw-w64/mingw-w64-libraries
 for lib in winpthreads winstorecompat; do
     cd $lib
+    TARGET_FLAGS=
     for arch in $ARCHS; do
+        case $arch in
+        aarch64)
+            TARGET_FLAGS="-marm64x"
+            ;;
+        arm64ec)
+            continue
+            ;;
+        esac
+
         [ -z "$CLEAN" ] || rm -rf build-$arch
         mkdir -p build-$arch
         cd build-$arch
         arch_prefix="$PREFIX/$arch-w64-mingw32"
         ../configure --host=$arch-w64-mingw32 --prefix="$arch_prefix" --libdir="$arch_prefix/lib" \
             --enable-silent-rules \
-            CFLAGS="$USE_CFLAGS" \
-            CXXFLAGS="$USE_CFLAGS"
+            CFLAGS="$USE_CFLAGS $TARGET_FLAGS" \
+            CXXFLAGS="$USE_CFLAGS $TARGET_FLAGS" \
+            LDFLAGS="$TARGET_FLAGS"
         $MAKE -j$CORES
         $MAKE install
         cd ..

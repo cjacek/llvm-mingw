@@ -79,11 +79,19 @@ for arch in $ARCHS; do
     [ -n "$NO_RECONF" ] || rm -rf CMake*
 
     EXTRA_CFLAGS=""
+    EXTRA_LDFLAGS=""
     case $arch in
     i686|x86_64)
         # Force using the mingw stdio functions, for correct long double
         # printing.
         EXTRA_CFLAGS="-D__USE_MINGW_ANSI_STDIO=1"
+        ;;
+    aarch64)
+        EXTRA_CFLAGS="-marm64x"
+        EXTRA_LDFLAGS="-marm64x"
+        ;;
+    arm64ec)
+        continue
         ;;
     esac
 
@@ -119,6 +127,8 @@ for arch in $ARCHS; do
         -DLIBCXXABI_LIBDIR_SUFFIX="" \
         -DCMAKE_C_FLAGS_INIT="$CFGUARD_CFLAGS $EXTRA_CFLAGS" \
         -DCMAKE_CXX_FLAGS_INIT="$CFGUARD_CFLAGS $EXTRA_CFLAGS" \
+        -DCMAKE_ASM_FLAGS_INIT="$EXTRA_CFLAGS" \
+        -DCMAKE_SHARED_LINKER_FLAGS="$EXTRA_LDFLAGS" \
         ..
 
     cmake --build . ${CORES:+-j${CORES}}
