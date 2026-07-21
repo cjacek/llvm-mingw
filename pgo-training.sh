@@ -54,6 +54,15 @@ if [ ! -d $SQLITE ]; then
     unzip sqlite-amalgamation-$SQLITE_VERSION.zip
 fi
 
+ORIG_ARCHS=$ARCHS
+ARCHS=""
+for arch in $ORIG_ARCHS; do
+    case $arch in
+        arm64ec) continue ;;
+        *) ARCHS="$ARCHS $arch" ;;
+    esac
+done
+
 rm -rf "$LLVM_PROFILE_DATA_DIR"
 export ARCHS
 $MAKE -f pgo-training.make PREFIX=$PREFIX STAGE1=$STAGE1 SQLITE=$SQLITE clean
