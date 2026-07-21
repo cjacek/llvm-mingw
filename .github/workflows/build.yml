@@ -552,7 +552,6 @@ jobs:
   # This also forces testing the bundled python executables.
   test-openmp:
     # Only running these tests in scheduled builds.
-    if: github.event_name == 'schedule'
     needs: [linux-cross-windows, prepare]
     strategy:
       fail-fast: false
@@ -618,7 +617,6 @@ jobs:
   # also forces testing the bundled python executables.
   test-compiler-rt:
     # Only running these tests in scheduled builds.
-    if: github.event_name == 'schedule'
     needs: [linux-cross-windows, prepare]
     strategy:
       fail-fast: false
@@ -695,7 +693,6 @@ jobs:
   # enabled, to catch code generation bugs that might trigger asserts, to
   # find such regressions early.
   linux-test-cross-build-ffmpeg:
-    if: github.event_name == 'schedule'
     needs: [linux-asserts]
     runs-on: ubuntu-latest
     strategy:
@@ -740,7 +737,6 @@ jobs:
   # compiler itself, but that only show up at runtime. This is only done
   # for scheduled builds.
   test-ffmpeg:
-    if: github.event_name == 'schedule'
     needs: [linux-cross-windows]
     runs-on: windows-latest
     defaults:
